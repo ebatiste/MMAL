@@ -1,13 +1,14 @@
 from parameter import parameter
 from gurobipy import *
 
-
-S = 19 # Number of Stations
-C = 170 # Cycle time in seconds
+#**************************** PARAMS ****************************
+S = 19 # Number of Stations, 19 is the minimum
+C = 172.8 # Cycle time in seconds
 M = 3
 models = range(M)
 stations = range(1,S+1)
 
+#**************************** INPUT *****************************
 # BIKE 1
 tasks1 = parameter()[0]
 t1 = parameter()[1]
@@ -27,17 +28,19 @@ preds3 = parameter()[8]
 CT3 = sum(list(t3.values())) / S
 
 
-#VARIABLES
+#***********************  VARIABLES *****************************
 mm = Model('MMAL')
 #mm.params.NonConvex = 2
 x1 = mm.addVars(tasks1, stations, vtype=GRB.BINARY, name="x1_ij")  # 1 if model1 task i is performed at station j, 0 o.w.
 x2 = mm.addVars(tasks2, stations, vtype=GRB.BINARY, name="x2_ij")  # 1 if model2 task i is performed at station j, 0 o.w.
 x3 = mm.addVars(tasks3, stations, vtype=GRB.BINARY, name="x3_ij")  # 1 if model3 task i is performed at station j, 0 o.w.
 
+s = mm.addVars(stations, vtype=GRB.BINARY, name="s#") # if station is used => 1; if not => 0
+numStations = mm.addVar(vtype = GRB.INTEGER, name="NumStations")
+
 st1 = mm.addVars(stations, name="st1_j")  # processing time at station j for model 1
 st2 = mm.addVars(stations, name="st2_j")  # processing time at station j for model 2
 st3 = mm.addVars(stations, name="st3_j")  # processing time at station j for model 3
-ST = mm.addVars(stations, name="ST_j")  # total processing time at station j
 
 
 D1 = mm.addVars(stations, name="D1_j")  # Difference from Takt time at station j for model 1
@@ -48,38 +51,42 @@ DA2 = mm.addVars(stations, name="D2_j")  # ABS(Difference from Takt time at stat
 DA3 = mm.addVars(stations, name="D3_j")  # ABS(Difference from Takt time at station j for model 3)
 
 
-#OBJECTIVE FUNCTION 1
+#****** OBJECTIVE FUNCTION 1 ******** (MINIMIZE DIFFERENCE FROM TAKT TIME *** PREFERRED *** ) SET S = 19
 
-mm.setObjective(quicksum(DA1[j] + DA2[j] + DA3[j] for j in stations), GRB.MINIMIZE)
+mm.setObjective(quicksum(DA1[j] + DA2[j] + DA3[j] for j in stations), GRB.MINIMIZE) 
 
 
-#OBJECTIVE FUNCTION 2
+#****** OBJECTIVE FUNCTION 2 ******** (MINIMIZE CYLE TIME) SET S = 26 
 
-'''
-mm.setObjective(quicksum(C-st1[j] for j in stations) +\
-				quicksum(C-st2[j] for j in stations) +\
-				quicksum(C-st3[j] for j in stations), GRB.MINIMIZE)
 
-'''
+#mm.setObjective((quicksum(st1[j] for j in stations)/S +\
+#				quicksum(st2[j] for j in stations)/S +\
+#				quicksum(st3[j] for j in stations)/S) / M, GRB.MINIMIZE) 
 
-#OBJECTIVE FUNCTION 3
-'''
-mm.setObjective(1/M * (quicksum(CT1-st1[j] for j in stations)/S +\
-					   quicksum(CT2-st2[j] for j in stations)/S +\
-					   quicksum(CT3-st3[j] for j in stations)/S), GRB.MINIMIZE)
-'''
 
-#****************************CONSTRAINTS*********************************************
+
+#****** OBJECTIVE FUNCTION 3 ******** (MINIMIZING Num Stations)
+
+#mm.setObjective(numStations ,GRB.MINIMIZE)
+
+
+#**************************** CONSTRAINTS *********************************************
 
 for j in stations:
-	mm.addConstr(quicksum(x1[i, j] * t1[i] for i in tasks1) == st1[j])
+	mm.addConstr(quicksum(x1[i, j] * t1[i] for i in tasks1) == st1[j]) #### Calculating total station time for ea. model
 	mm.addConstr(quicksum(x2[i, j] * t2[i] for i in tasks2) == st2[j])
 	mm.addConstr(quicksum(x3[i, j] * t3[i] for i in tasks3) == st3[j])
-	mm.addConstr(st1[j] + st2[j] + st3[j] == ST[j])
 
-	mm.addConstr(st1[j] <= 190)
-	mm.addConstr(st2[j] <= 190)
-	mm.addConstr(st3[j] <= 190)
+	for i in tasks1: # Checking which stations are being used
+		mm.addConstr(x1[i,j] <= s[j])
+	for i in tasks2:
+		mm.addConstr(x2[i,j] <= s[j])
+	for i in tasks3:
+		mm.addConstr(x3[i,j] <= s[j])
+
+	#mm.addConstr(st1[j] <= C)
+	#mm.addConstr(st2[j] <= C)
+	#mm.addConstr(st3[j] <= C)
 
 	mm.addConstr(C - st1[j] == D1[j])
 	mm.addConstr(C - st2[j] == D2[j])
@@ -89,9 +96,7 @@ for j in stations:
 	mm.addConstr(DA3[j] == abs_(D3[j]))
 
 
-	#mm.addConstr(st1[j] >= 1)
-	#mm.addConstr(st2[j] >= 1)
-	#mm.addConstr(st3[j] >= 1)
+mm.addConstr(quicksum(s[j] for j in stations) == numStations)
 
 
 for i in tasks1:
@@ -101,22 +106,31 @@ for i in tasks2:
 for i in tasks3:
 	mm.addConstr(quicksum(x3[i,j] for j in stations) == 1)
 
+########################## BOUNDARY CONSTRAINTS #####################
+for i in tasks1:
+	for j in tasks2:
+		for k in tasks3:
+			if i[1:4] == j[1:4] and i[1:4] == k[1:4]:
+				for s in stations:
+					mm.addConstr( x1[i,s] == x2[j,s])					
+					mm.addConstr( x1[i,s] == x3[k,s])
 
+########################## PREDECESSOR CONSTRAINTS ###################
 
 for i in tasks1:
 	for h in preds1[i]:
 		for k in stations:
-			mm.addConstr(quicksum(x1[int(h),j] for j in range(1,k+1)) >= x1[i,k])
+			mm.addConstr(quicksum(x1[h,j] for j in range(1,k+1)) >= x1[i,k])
 for i in tasks2:
 	for h in preds2[i]:
 		for k in stations:
-			mm.addConstr(quicksum(x2[int(h),j] for j in range(1,k+1)) >= x2[i,k])
+			mm.addConstr(quicksum(x2[h,j] for j in range(1,k+1)) >= x2[i,k])
 for i in tasks3:
 	for h in preds3[i]:
 		for k in stations:
-			mm.addConstr(quicksum(x3[int(h),j] for j in range(1,k+1)) >= x3[i,k])
+			mm.addConstr(quicksum(x3[h,j] for j in range(1,k+1)) >= x3[i,k])
 
-# OPTIMIZE
+#***************************** OPTIMIZE *******************************
 mm.optimize()
 
 
