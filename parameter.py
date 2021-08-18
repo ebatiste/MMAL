@@ -8,21 +8,21 @@ def parameter():
 	df = xl.parse('Precedences')
 
 # Bike 1
-	tasks_b1 = [x for x in df["Tasks"].tolist() if math.isnan(x) == False]
+	tasks_b1 = [str(x)[:4] for x in df["Tasks"].tolist() if math.isnan(x) == False]
 	timelist1 = [x for x in df["Time"].tolist() if math.isnan(x) == False]
 	time_b1 = {x:y for (x,y) in zip(tasks_b1,timelist1)}
 	predlist1 = [str(x).split(",") if str(x) != 'nan' else [] for x in df["Precessor"].tolist()]
 	pred_b1 = {x:y for (x,y) in zip(tasks_b1,predlist1)}
 
 # Bike 2
-	tasks_b2 = [x for x in df["Tasks.1"].tolist() if math.isnan(x) == False]
+	tasks_b2 = [str(x)[:4] for x in df["Tasks.1"].tolist() if math.isnan(x) == False]
 	timelist2 = [x for x in df["Time.1"].tolist() if math.isnan(x) == False]
 	time_b2 = {x:y for (x,y) in zip(tasks_b2,timelist2)}
 	predlist2 = [str(x).split(",") if str(x) != 'nan' else [] for x in df["Precessor.1"].tolist()]
 	pred_b2 = {x:y for (x,y) in zip(tasks_b2,predlist2)}
 
 # Bike 3
-	tasks_b3 = [x for x in df["Tasks.2"].tolist() if math.isnan(x) == False]
+	tasks_b3 = [str(x) for x in df["Tasks.2"].tolist() if math.isnan(x) == False]
 	timelist3 = [x for x in df["Time.2"].tolist() if math.isnan(x) == False]
 	time_b3 = {x:y for (x,y) in zip(tasks_b3, timelist3)}
 	predlist3 = [str(x).split(",") if str(x) != 'nan' else [] for x in df["Precessor.2"].tolist()]
