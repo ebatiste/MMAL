@@ -44,11 +44,13 @@ DATA_FILE = 'ALLBIKEDATA.xlsx'
 DATA_FILE1 = 'Sequencing1.xlsx'
 
 #################################   Read Excel data    #########################################
-#
+
 df = pd.read_excel(DATA_FILE, sheet_name='Work Plan', header=0,converters={'internal_depth':int,'internal_id':int,'internal_depth.1':int,'internal_id.1':int,'internal_depth.2':int,'internal_id.2':int})
 prcd = pd.read_excel(DATA_FILE, sheet_name='Precedences', header=0)
-seq1 = pd.read_excel(DATA_FILE1, sheet_name='Sequence1-Batch',header=0)
+seq1 = pd.read_excel(DATA_FILE1, sheet_name='Sequence1-Optimal',header=0)
 seq2 = pd.read_excel(DATA_FILE1, sheet_name='Sequence2-Min Avg',header=0)
+seq3 = pd.read_excel(DATA_FILE1, sheet_name='Sequence2-Random',header=0)
+
 
 ############# Sequencing Options ###########
 pos1 = [x for x in seq1["pos"].tolist()]
@@ -58,6 +60,11 @@ sequence1 = [(x,y) for x,y in zip(pos1,biketype1)]
 pos2 = [x for x in seq2["pos"].tolist()]
 biketype2 = [x for x in seq2["biketype"].tolist()]
 sequence2 = [(x,y) for x,y in zip(pos2,biketype2)]
+
+pos3 = [x for x in seq3["pos"].tolist()]
+biketype3 = [x for x in seq3["biketype"].tolist()]
+sequence3 = [(x,y) for x,y in zip(pos3,biketype3)]
+
 
 no_jobs = len(sequence1)  # int(input("How many jobs should be created?"))
 mode = 1  # 1=auto, 2=manual  #Variantenauswahl
@@ -119,7 +126,7 @@ for i in AVO_13:
 
 od = [None] * no_jobs #Leere Order-Liste mit der Länge "Anzahl Aufträge" erstellen
 
-for n in sequence1:
+for n in sequence1: #CHANGE SEQUENCE HERE
 
     indices_1 = []
     values = []
