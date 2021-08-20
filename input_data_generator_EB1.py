@@ -49,7 +49,7 @@ df = pd.read_excel(DATA_FILE, sheet_name='Work Plan', header=0,converters={'inte
 prcd = pd.read_excel(DATA_FILE, sheet_name='Precedences', header=0)
 seq1 = pd.read_excel(DATA_FILE1, sheet_name='Sequence1-Optimal',header=0)
 seq2 = pd.read_excel(DATA_FILE1, sheet_name='Sequence2-Min Avg',header=0)
-seq3 = pd.read_excel(DATA_FILE1, sheet_name='Sequence2-Random',header=0)
+seq3 = pd.read_excel(DATA_FILE1, sheet_name='Sequence3-Random',header=0)
 
 
 ############# Sequencing Options ###########
