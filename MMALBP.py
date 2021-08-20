@@ -73,7 +73,7 @@ mm.setObjective(quicksum(DA1[j] + DA2[j] + DA3[j] for j in stations), GRB.MINIMI
 #**************************** CONSTRAINTS *********************************************
 
 for j in stations:
-	mm.addConstr(quicksum(x1[i, j] * t1[i] for i in tasks1) == st1[j]) #### Calculating total station time for ea. model
+	mm.addConstr(quicksum(x1[i, j] * t1[i] for i in tasks1) == st1[j]) # Calculating total station time for ea. model
 	mm.addConstr(quicksum(x2[i, j] * t2[i] for i in tasks2) == st2[j])
 	mm.addConstr(quicksum(x3[i, j] * t3[i] for i in tasks3) == st3[j])
 
