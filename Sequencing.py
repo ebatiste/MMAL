@@ -1,17 +1,22 @@
+import pandas as pd
 from gurobipy import *
+import math
 
 positions = range(1,251) # all possible positions
 stations = range(1,19)
 C = 172.8
 M = range(1,4) # models
 d = [145,55,50] # demand for each bike type
-t = [2450,2570,2620]
-b1 = [170,150,140,90,120,130,160,170,120,120,70,150,150,150,60,170,70,120]
-b2 = [170,150,140,90,120,130,160,170,120,120,170,150,150,150,60,170,70,120]
-b3 = [170,150,140,90,120,130,160,170,120,120,190,150,150,150,160,170,70,120]
-r = []
-for x in d:
-	r.append(x/250)
+
+file = 'ALLBIKEDATA.xlsx'
+xl = pd.ExcelFile(file)
+df = xl.parse('Sequencing.py Data')
+
+b1 = [int(x) for x in df["Race Bike"].tolist() if math.isnan(x) == False]
+b2 = [int(x) for x in df["Mountain Bike"].tolist() if math.isnan(x) == False]
+b3 = [int(x) for x in df["Ebike"].tolist() if math.isnan(x) == False]
+
+
 
 #VARIABLES
 m = Model('SEQ')
@@ -83,40 +88,5 @@ if status == 2:
 	for v in m.getVars():
 		print('%s = %g' % (v.varName, v.x))
 	print('Optimal objective value:\n{}'.format(m.objVal))
-
-'''
-for s in stations:
-	for p in positions:
-		for t in b1:
-			m.addConstr(spm[s,p,1] == b1[t])
-
-for s in stations:
-	for p in positions:
-		for t in b2:
-			m.addConstr(spm[s,p,2] == b2[t])
-
-for s in stations:
-	for p in positions:
-		for t in b3:
-			m.addConstr(spm[s,p,3] == b3[t])
-
-abs_((x[1,k]*it[s,k,1] + x[2,k]*it[s,k,2] + x[3,k]*it[s,k,3]) + (x[1,k-1]*it[s,k,1] + x[2,k-1]*it[s,k,2] + x[3,k-1]*it[s,k,3]))
-
-
-for s in stations:
-	for p in positions:
-		m.addConstr(it[s,p,1] == (C - b1[s-1]) * x[1,p])
-for s in stations:
-	for p in positions:
-		m.addConstr(it[s,p,2] == (C - b2[s-1]) * x[2,p])
-for s in stations:
-	for p in positions:
-		m.addConstr(it[s,p,3] == (C - b3[s-1]) * x[3,p])
-
-
-
-
-'''
-
 
 
